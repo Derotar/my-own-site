@@ -1,0 +1,12 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path id="circlePath" d="
+M 10, 50
+a 40,40 0 1,1 80,0
+40,40 0 1,1 -80,0
+" fill="white" fill-opacity="0" />
+    <text>
+        <textPath href="#circlePath" font-size="12" font-weight="bold" family="Poppins" style="fill:currentColor">
+            WEB3 FRONTEND DEVELOPER
+        </textPath>
+    </text>
+</svg>

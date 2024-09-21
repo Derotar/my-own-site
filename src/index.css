@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-own-bg text-own-white;
+  }
+
+  a {
+    @apply text-own-white hover:text-own-light-blue active:text-own-blue transition-all duration-200 ease-linear;
+  }
+}
