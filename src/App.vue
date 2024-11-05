@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import HelloWorld from "./components/HelloWorld.vue";
 import Layout from "./components/Layout.vue";
 import Banner from "./components/Banner.vue";
 import Work from "./components/Work.vue";
