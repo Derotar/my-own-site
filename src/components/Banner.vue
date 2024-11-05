@@ -11,25 +11,9 @@ import { onMounted, ref } from "vue";
 
 const { x, y } = useWindowScroll();
 
-const ROWS = 7;
-const COLS = 7;
+const ROWS = 8;
+const COLS = 8;
 const squares = new Array(ROWS * COLS).fill(false);
-
-onMounted(() => {
-  const gridBg = document.querySelector(".grid-bg") as HTMLElement | null;
-  if (!gridBg) return;
-
-  const rect = gridBg.getBoundingClientRect();
-
-  const height = rect.height;
-  const width = rect.width;
-
-  // console.log(
-  //   "grid-bg",
-  //   gridBg.getBoundingClientRect().height,
-  //   gridBg.getBoundingClientRect().width
-  // );
-});
 
 function getSquareByIndex(index: number) {
   return document.querySelector(
@@ -37,38 +21,78 @@ function getSquareByIndex(index: number) {
   ) as HTMLElement | null;
 }
 
+function isRightBlockAvaliable(index: number) {
+  const currentRow = Math.floor(index / COLS);
+
+  const isAvailable = index < currentRow * COLS + COLS - 1;
+  if (!isAvailable) return { isAvailable, isOpened: false };
+  return { isAvailable, isOpened: squares[index + 1] };
+}
+
+function isLeftBlockAvailable(index: number) {
+  const currentRow = Math.floor(index / COLS);
+
+  const isAvailable = index > currentRow * COLS;
+  if (!isAvailable) return { isAvailable, isOpened: false };
+  return { isAvailable, isOpened: squares[index - 1] };
+}
+
+function isTopBlockAvailable(index: number) {
+  const isAvailable = index - COLS >= 0;
+  if (!isAvailable) return { isAvailable, isOpened: false };
+  return { isAvailable, isOpened: squares[index - COLS] };
+}
+
+function isBottomBlockAvailable(index: number) {
+  const isAvailable = index + COLS <= squares.length - 1;
+  if (!isAvailable) return { isAvailable, isOpened: false };
+  return { isAvailable, isOpened: squares[index + COLS] };
+}
+
+onMounted(() => {
+  const gridBg = document.querySelector(".grid-bg") as HTMLElement | null;
+  if (!gridBg) return;
+});
+
 const onOpenCard = (index: number) => {
   squares[index] = true;
-  const square = document.querySelector(`*[data-number="${index}"]`);
+  const square = getSquareByIndex(index);
   if (!square) return;
 
-  const currentRow = Math.floor(index / COLS);
-  // const currentColumn = Math.floor(index / ROWS);
-
   //check if there element above and it is not opened, if yes add shadow
-  if (index - COLS >= 0 && !squares[index - COLS]) {
-    (square as HTMLElement).classList.add("shadow-top");
+  if (
+    isTopBlockAvailable(index).isAvailable &&
+    !isTopBlockAvailable(index).isOpened
+  ) {
+    square.classList.add("shadow-top");
   }
   //check if there element under and it is opened, then remove it shadow-top
-  if (index + COLS <= squares.length - 1 && squares[index + COLS]) {
-    const underSquare = document.querySelector(
-      `*[data-number="${index + COLS}"]`
-    );
+  if (
+    isBottomBlockAvailable(index).isAvailable &&
+    isBottomBlockAvailable(index).isOpened
+  ) {
+    const underSquare = getSquareByIndex(index + COLS);
     if (underSquare) {
-      (underSquare as HTMLElement).classList.remove("shadow-top");
+      underSquare.classList.remove("shadow-top");
     }
   }
 
   //check if there element to the left, and if it is not opened to add shadow-left
-  if (index > currentRow * COLS && !squares[index - 1]) {
+  if (
+    isLeftBlockAvailable(index).isAvailable &&
+    !isLeftBlockAvailable(index).isOpened
+  ) {
     square.classList.add("shadow-left");
   }
 
   //check if there element to the right, and if it is opened to remove it shadow-left
-  if (index < currentRow * COLS + COLS - 1 && squares[index + 1]) {
-    const rightSquare = document.querySelector(`*[data-number="${index + 1}"]`);
+  if (
+    isRightBlockAvaliable(index).isAvailable &&
+    isRightBlockAvaliable(index).isOpened
+  ) {
+    const rightSquare = getSquareByIndex(index + 1);
     if (rightSquare) {
-      (rightSquare as HTMLElement).classList.remove("shadow-left");
+      rightSquare.classList.remove("shadow-left");
     }
   }
 
@@ -79,30 +103,6 @@ const onOpenCard = (index: number) => {
   // 3. square is right-bottom to closed block that will do diagonal shadow
 
   //lets add helpers
-
-  function isRightBlockAvaliable(index: number) {
-    const isAvailable = index < currentRow * COLS + COLS - 1;
-    if (!isAvailable) return { isAvailable, isOpened: false };
-    return { isAvailable, isOpened: squares[index + 1] };
-  }
-
-  function isLeftBlockAvailable(index: number) {
-    const isAvailable = index > currentRow * COLS;
-    if (!isAvailable) return { isAvailable, isOpened: false };
-    return { isAvailable, isOpened: squares[index - 1] };
-  }
-
-  function isTopBlockAvailable(index: number) {
-    const isAvailable = index - COLS >= 0;
-    if (!isAvailable) return { isAvailable, isOpened: false };
-    return { isAvailable, isOpened: squares[index - COLS] };
-  }
-
-  function isBottomBlockAvailable(index: number) {
-    const isAvailable = index + COLS <= squares.length - 1;
-    if (!isAvailable) return { isAvailable, isOpened: false };
-    return { isAvailable, isOpened: squares[index + COLS] };
-  }
 
   //1 case: right block
 
@@ -162,27 +162,6 @@ const onOpenCard = (index: number) => {
       rightBottomDiagonalSquare.classList.remove("shadow-diagonal");
     }
   }
-
-  //check if right, bottom, and right-bottom diagonal element is open
-  // if (
-  //   index + COLS <= squares.length - 1 &&
-  //   index < currentRow * COLS + COLS - 1 &&
-  //   index + COLS + 1 < squares.length - 1 &&
-  //   squares[index + 1] &&
-  //   squares[index + COLS + 1] &&
-  //   squares[index + COLS]
-  // ) {
-  //   console.log("diagonal one");
-  //   const rightBottomDiagonalSquare = document.querySelector(
-  //     `*[data-number="${index + COLS + 1}"]`
-  //   );
-
-  //   if (rightBottomDiagonalSquare) {
-  //     (rightBottomDiagonalSquare as HTMLElement).classList.add(
-  //       "shadow-diagonal"
-  //     );
-  //   }
-  // }
 };
 
 const onCloseCard = (index: number) => {
