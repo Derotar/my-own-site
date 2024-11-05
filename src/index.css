@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-own-bg text-own-white;
+    @apply text-own-black scroll-smooth;
   }
 
   a {
