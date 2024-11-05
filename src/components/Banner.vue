@@ -11,8 +11,8 @@ import { onMounted, ref } from "vue";
 
 const { x, y } = useWindowScroll();
 
-const ROWS = 10;
-const COLS = 10;
+const ROWS = 7;
+const COLS = 7;
 const squares = new Array(ROWS * COLS).fill(false);
 
 onMounted(() => {
@@ -30,6 +30,12 @@ onMounted(() => {
   //   gridBg.getBoundingClientRect().width
   // );
 });
+
+function getSquareByIndex(index: number) {
+  return document.querySelector(
+    `*[data-number="${index}"]`
+  ) as HTMLElement | null;
+}
 
 const onOpenCard = (index: number) => {
   squares[index] = true;
@@ -65,6 +71,118 @@ const onOpenCard = (index: number) => {
       (rightSquare as HTMLElement).classList.remove("shadow-left");
     }
   }
+
+  // there is diagonal shadow case
+  // 3 cases:
+  // 1. square is right to closed block that will do diagonal shadwo
+  // 2. square is bottom to closed block that will do diagonal shadow
+  // 3. square is right-bottom to closed block that will do diagonal shadow
+
+  //lets add helpers
+
+  function isRightBlockAvaliable(index: number) {
+    const isAvailable = index < currentRow * COLS + COLS - 1;
+    if (!isAvailable) return { isAvailable, isOpened: false };
+    return { isAvailable, isOpened: squares[index + 1] };
+  }
+
+  function isLeftBlockAvailable(index: number) {
+    const isAvailable = index > currentRow * COLS;
+    if (!isAvailable) return { isAvailable, isOpened: false };
+    return { isAvailable, isOpened: squares[index - 1] };
+  }
+
+  function isTopBlockAvailable(index: number) {
+    const isAvailable = index - COLS >= 0;
+    if (!isAvailable) return { isAvailable, isOpened: false };
+    return { isAvailable, isOpened: squares[index - COLS] };
+  }
+
+  function isBottomBlockAvailable(index: number) {
+    const isAvailable = index + COLS <= squares.length - 1;
+    if (!isAvailable) return { isAvailable, isOpened: false };
+    return { isAvailable, isOpened: squares[index + COLS] };
+  }
+
+  //1 case: right block
+
+  if (
+    isLeftBlockAvailable(index).isAvailable &&
+    !isLeftBlockAvailable(index).isOpened &&
+    isBottomBlockAvailable(index - 1).isAvailable &&
+    isBottomBlockAvailable(index - 1).isOpened &&
+    isBottomBlockAvailable(index).isAvailable &&
+    isBottomBlockAvailable(index).isOpened
+  ) {
+    const bottomSquare = getSquareByIndex(index + COLS);
+    if (bottomSquare) {
+      bottomSquare.classList.add("shadow-diagonal");
+    }
+  }
+
+  // 2 case: bottom block
+
+  if (
+    isTopBlockAvailable(index).isAvailable &&
+    !isTopBlockAvailable(index).isOpened &&
+    isRightBlockAvaliable(index).isAvailable &&
+    isRightBlockAvaliable(index).isOpened &&
+    isRightBlockAvaliable(index - COLS).isAvailable &&
+    isRightBlockAvaliable(index - COLS).isOpened
+  ) {
+    const rightSquare = getSquareByIndex(index + 1);
+    if (rightSquare) {
+      rightSquare.classList.add("shadow-diagonal");
+    }
+  }
+
+  // 3 case: right-bottom diagonal block
+  if (
+    isTopBlockAvailable(index).isAvailable &&
+    isTopBlockAvailable(index).isOpened &&
+    isLeftBlockAvailable(index).isAvailable &&
+    isLeftBlockAvailable(index).isOpened &&
+    isTopBlockAvailable(index - 1).isAvailable &&
+    !isTopBlockAvailable(index - 1).isOpened
+  ) {
+    square.classList.add("shadow-diagonal");
+  }
+
+  // check if square opening and right-bottom-diagonal is open
+  if (
+    isRightBlockAvaliable(index).isAvailable &&
+    isRightBlockAvaliable(index).isOpened &&
+    isBottomBlockAvailable(index).isAvailable &&
+    isBottomBlockAvailable(index).isOpened &&
+    isBottomBlockAvailable(index + 1).isAvailable &&
+    isBottomBlockAvailable(index + 1).isOpened
+  ) {
+    const rightBottomDiagonalSquare = getSquareByIndex(index + COLS + 1);
+    if (rightBottomDiagonalSquare) {
+      rightBottomDiagonalSquare.classList.remove("shadow-diagonal");
+    }
+  }
+
+  //check if right, bottom, and right-bottom diagonal element is open
+  // if (
+  //   index + COLS <= squares.length - 1 &&
+  //   index < currentRow * COLS + COLS - 1 &&
+  //   index + COLS + 1 < squares.length - 1 &&
+  //   squares[index + 1] &&
+  //   squares[index + COLS + 1] &&
+  //   squares[index + COLS]
+  // ) {
+  //   console.log("diagonal one");
+  //   const rightBottomDiagonalSquare = document.querySelector(
+  //     `*[data-number="${index + COLS + 1}"]`
+  //   );
+
+  //   if (rightBottomDiagonalSquare) {
+  //     (rightBottomDiagonalSquare as HTMLElement).classList.add(
+  //       "shadow-diagonal"
+  //     );
+  //   }
+  // }
 };
 
 const onCloseCard = (index: number) => {
@@ -161,6 +279,8 @@ onMounted(() => {
       >
         <div class="upper-shadow z-50"></div>
         <div class="side-shadow z-50"></div>
+        <div class="diagonal-shadow z-50"></div>
+
         <div class="flip-card-inner">
           <div class="flip-card-front">{{ i }}</div>
           <div class="flip-card-back"></div>
@@ -231,7 +351,6 @@ onMounted(() => {
 <style scoped>
 .grid-bg > div {
   background-color: transparent;
-  /* box-shadow: 0px 5px 10px 2px #ca8a0420 inset; */
 }
 
 @keyframes fade-in {
@@ -320,7 +439,7 @@ onMounted(() => {
   top: 0;
   right: 0;
   left: 0;
-  height: 10px;
+  height: var(--shadow-size, 10px);
   background: transparent;
 }
 
@@ -329,7 +448,16 @@ onMounted(() => {
   top: 0;
   bottom: 0;
   left: 0;
-  width: 10px;
+  width: var(--shadow-size, 10px);
+  background: transparent;
+}
+
+.diagonal-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--shadow-size, 10px);
+  height: var(--shadow-size, 10px);
   background: transparent;
 }
 
@@ -347,6 +475,10 @@ onMounted(() => {
     rgba(0, 0, 0, 1) 0%,
     rgba(0, 0, 0, 0) 100%
   );
+}
+
+.shadow-diagonal > .diagonal-shadow {
+  background: radial-gradient(circle at top left, black, transparent 70%);
 }
 
 /* .flip-card.flipped > .shadow-top {

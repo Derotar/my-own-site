@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --shadow-size: 10px;
+  }
   body {
     @apply text-own-black scroll-smooth;
   }
