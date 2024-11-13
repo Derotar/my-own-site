@@ -11,8 +11,9 @@ import { onMounted, ref } from "vue";
 
 const { x, y } = useWindowScroll();
 
-const ROWS = 8;
-const COLS = 8;
+const SQUARE_CLOSE_TIME = 500000; // when square close in ms
+const ROWS = 20;
+const COLS = 20;
 const squares = new Array(ROWS * COLS).fill(false);
 
 function getSquareByIndex(index: number) {
@@ -49,6 +50,10 @@ function isBottomBlockAvailable(index: number) {
   return { isAvailable, isOpened: squares[index + COLS] };
 }
 
+function getFlipCardBottom(el: HTMLElement) {
+  return el.querySelector(".flip-card-bottom") as HTMLElement | null;
+}
+
 onMounted(() => {
   const gridBg = document.querySelector(".grid-bg") as HTMLElement | null;
   if (!gridBg) return;
@@ -64,7 +69,7 @@ const onOpenCard = (index: number) => {
     isTopBlockAvailable(index).isAvailable &&
     !isTopBlockAvailable(index).isOpened
   ) {
-    square.classList.add("shadow-top");
+    getFlipCardBottom(square)?.classList.add("shadow-top");
   }
   //check if there element under and it is opened, then remove it shadow-top
   if (
@@ -73,7 +78,7 @@ const onOpenCard = (index: number) => {
   ) {
     const underSquare = getSquareByIndex(index + COLS);
     if (underSquare) {
-      underSquare.classList.remove("shadow-top");
+      getFlipCardBottom(underSquare)?.classList.remove("shadow-top");
     }
   }
 
@@ -82,7 +87,7 @@ const onOpenCard = (index: number) => {
     isLeftBlockAvailable(index).isAvailable &&
     !isLeftBlockAvailable(index).isOpened
   ) {
-    square.classList.add("shadow-left");
+    getFlipCardBottom(square)?.classList.add("shadow-left");
   }
 
   //check if there element to the right, and if it is opened to remove it shadow-left
@@ -92,7 +97,7 @@ const onOpenCard = (index: number) => {
   ) {
     const rightSquare = getSquareByIndex(index + 1);
     if (rightSquare) {
-      rightSquare.classList.remove("shadow-left");
+      getFlipCardBottom(rightSquare)?.classList.remove("shadow-left");
     }
   }
 
@@ -116,7 +121,7 @@ const onOpenCard = (index: number) => {
   ) {
     const bottomSquare = getSquareByIndex(index + COLS);
     if (bottomSquare) {
-      bottomSquare.classList.add("shadow-diagonal");
+      getFlipCardBottom(bottomSquare)?.classList.add("shadow-diagonal");
     }
   }
 
@@ -132,7 +137,7 @@ const onOpenCard = (index: number) => {
   ) {
     const rightSquare = getSquareByIndex(index + 1);
     if (rightSquare) {
-      rightSquare.classList.add("shadow-diagonal");
+      getFlipCardBottom(rightSquare)?.classList.add("shadow-diagonal");
     }
   }
 
@@ -145,7 +150,7 @@ const onOpenCard = (index: number) => {
     isTopBlockAvailable(index - 1).isAvailable &&
     !isTopBlockAvailable(index - 1).isOpened
   ) {
-    square.classList.add("shadow-diagonal");
+    getFlipCardBottom(square)?.classList.add("shadow-diagonal");
   }
 
   // check if square opening and right-bottom-diagonal is open
@@ -159,17 +164,46 @@ const onOpenCard = (index: number) => {
   ) {
     const rightBottomDiagonalSquare = getSquareByIndex(index + COLS + 1);
     if (rightBottomDiagonalSquare) {
-      rightBottomDiagonalSquare.classList.remove("shadow-diagonal");
+      getFlipCardBottom(rightBottomDiagonalSquare)?.classList.remove(
+        "shadow-diagonal"
+      );
     }
   }
 };
 
 const onCloseCard = (index: number) => {
   squares[index] = false;
-  const square = document.querySelector(`*[data-number="${index}"]`);
+  const square = document.querySelector(
+    `*[data-number="${index}"]`
+  ) as HTMLElement | null;
   if (!square) return;
 
-  // square.classList.remove("shadow-top", "shadow-left");
+  getFlipCardBottom(square)?.classList.remove(
+    "shadow-top",
+    "shadow-left",
+    "shadow-diagonal"
+  );
+
+  if (
+    isBottomBlockAvailable(index).isAvailable &&
+    isBottomBlockAvailable(index).isOpened
+  ) {
+    const underSquare = getSquareByIndex(index + COLS);
+    if (underSquare) {
+      getFlipCardBottom(underSquare)?.classList.add("shadow-top");
+    }
+  }
+
+  if (
+    isRightBlockAvaliable(index).isAvailable &&
+    isRightBlockAvaliable(index).isOpened
+  ) {
+    const rightSquare = getSquareByIndex(index + 1);
+    if (rightSquare) {
+      getFlipCardBottom(rightSquare)?.classList.add("shadow-left");
+    }
+  }
+
   // if (index + 10 <= squares.length - 1) {
   //   const underSquare = document.querySelector(
   //     `*[data-number="${index + 10}"]`
@@ -237,7 +271,7 @@ onMounted(() => {
       const i = div.getAttribute("data-number");
       if (!i) return;
       onCloseCard(Number(i));
-    }, 30000);
+    }, SQUARE_CLOSE_TIME);
   });
 });
 </script>
@@ -253,16 +287,14 @@ onMounted(() => {
     >
       <div
         v-for="i in Array(ROWS * COLS).keys()"
-        class="flip-card relative"
+        class="flip-card relative bg-[yellow]"
         :data-number="i"
       >
-        <div class="upper-shadow z-50"></div>
-        <div class="side-shadow z-50"></div>
-        <div class="diagonal-shadow z-50"></div>
-
-        <div class="flip-card-inner">
-          <div class="flip-card-front">{{ i }}</div>
-          <div class="flip-card-back"></div>
+        <div class="flip-card-top"></div>
+        <div class="flip-card-bottom">
+          <div class="upper-shadow z-50"></div>
+          <div class="side-shadow z-50"></div>
+          <div class="diagonal-shadow z-50"></div>
         </div>
       </div>
     </div>
@@ -362,14 +394,30 @@ onMounted(() => {
 }
 
 .flip-card {
-  background-color: transparent;
+  background: yellow;
   width: 100%;
   height: 100%;
-  perspective: 1000px; /* Perspective to create a 3D effect */
   position: relative;
 }
 
-.flip-card-inner {
+.flip-card-top {
+  position: absolute;
+  inset: 0;
+  background: red;
+  z-index: 1;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.flip-card-bottom {
+  position: absolute;
+  inset: 0;
+}
+
+.flip-card.flipped .flip-card-top {
+  opacity: 0;
+}
+
+/* .flip-card-inner {
   position: relative;
   width: 100%;
   height: 100%;
@@ -402,16 +450,7 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   font-size: 18px;
-  /* box-shadow: 0px 5px 10px 2px rgba(34, 60, 80, 0.2) inset; */
-  /* box-shadow: inset 0 10px 4px -4px rgba(0, 0, 0, 0.5); */
-  /* box-shadow: inset 0 -10px 4px -4px rgba(0, 0, 0, 0.5); */
-  /* box-shadow: inset 10px 0px 4px -4px rgba(0, 0, 0, 0.5),
-    inset -10px 0px 4px -4px rgba(0, 0, 0, 0.5); */
-
-  /* box-shadow: 0px 5px 10px 2px rgba(34, 60, 80, 0.2); */
-  /* box-shadow: 10px 0 10px -5px rgba(0, 0, 0, 0.5); */
-  /* box-shadow: 0 10px 5px -5px rgba(0, 0, 0, 0.5); */
-}
+} */
 
 .upper-shadow {
   position: absolute;
@@ -545,10 +584,6 @@ onMounted(() => {
   box-shadow: inset 10px 0px 4px -4px rgba(0, 0, 0, 0.5),
     inset -10px 0px 4px -4px rgba(0, 0, 0, 0.5);
 } */
-
-.flip-card.flipped .flip-card-inner {
-  transform: rotateY(180deg);
-}
 
 /* .border-t {
   border-top: 2px solid red;
