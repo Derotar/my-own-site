@@ -13,7 +13,7 @@ const { x, y } = useWindowScroll();
 
 const SQUARE_CLOSE_TIME = 500000; // when square close in ms
 const ROWS = 20;
-const COLS = 20;
+const COLS = 30;
 const squares = new Array(ROWS * COLS).fill(false);
 
 function getSquareByIndex(index: number) {
@@ -282,7 +282,7 @@ onMounted(() => {
     class="w-full h-screen flex items-center justify-center px-[100px] relative"
   >
     <div
-      class="absolute inset-0 grid grid-bg z-20"
+      class="absolute inset-0 grid grid-bg z-20 overflow-hidden"
       :style="`grid-template-rows: repeat(${ROWS}, 1fr); grid-template-columns: repeat(${COLS}, 1fr);`"
     >
       <div

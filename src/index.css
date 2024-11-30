@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --shadow-size: 6px;
+    --shadow-size: 10px;
   }
   body {
     @apply text-own-black scroll-smooth;
