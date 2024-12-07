@@ -1,0 +1,1 @@
+{"root":["./src/main.ts","./src/vite-env.d.ts","./src/composables/usewindowscroll.ts","./src/app.vue","./src/components/banner.vue","./src/components/helloworld.vue","./src/components/layout.vue","./src/components/work.vue","./src/components/base/floatingitem.vue","./src/components/nav/footer.vue","./src/components/nav/header.vue"],"version":"5.6.2"}

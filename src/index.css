@@ -5,6 +5,8 @@
 @layer base {
   :root {
     --shadow-size: 10px;
+    --background-color: #ffd400cc;
+    --flipcard-color: #758000;
   }
   body {
     @apply text-own-black scroll-smooth;

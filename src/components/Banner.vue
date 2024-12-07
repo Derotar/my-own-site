@@ -7,13 +7,13 @@ import DocumentIcon from "../assets/svg/contacts/document.svg";
 import TelegramIcon from "../assets/svg/contacts/telegram.svg";
 import WhatsappIcon from "../assets/svg/contacts/whatsapp.svg";
 import FloatingItem from "./base/FloatingItem.vue";
-import { onMounted, ref } from "vue";
+import { onMounted } from "vue";
 
-const { x, y } = useWindowScroll();
+const { y } = useWindowScroll();
 
 const SQUARE_CLOSE_TIME = 500000; // when square close in ms
-const ROWS = 20;
-const COLS = 30;
+const ROWS = 25;
+const COLS = 35;
 const squares = new Array(ROWS * COLS).fill(false);
 
 function getSquareByIndex(index: number) {
@@ -274,6 +274,63 @@ onMounted(() => {
     }, SQUARE_CLOSE_TIME);
   });
 });
+
+onMounted(() => {
+  const undersquared = document.querySelectorAll(".undersquared");
+  if (!undersquared) return;
+
+  undersquared.forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    console.log(window.outerWidth);
+    console.log(window.innerWidth);
+    // find squares that overlap with the element
+    const leftSide = rect.left;
+    const rightSide = rect.left + rect.width;
+    const topSide = rect.top;
+    const bottomSide = rect.top + rect.height;
+    console.log(leftSide, rightSide, topSide, bottomSide);
+
+    const arr = Array.from({ length: ROWS * COLS }, (_, i) => i);
+    arr
+      .filter((el) => {
+        //get left side
+        const elWidth = window.innerWidth / COLS;
+        const elHeight = window.innerHeight / ROWS;
+
+        const elLeft = elWidth * (el % COLS);
+        const elRight = elWidth * ((el % COLS) + 1);
+        const elTop = elHeight * Math.trunc(el / COLS);
+        const elBottom = elHeight * (Math.trunc(el / COLS) + 1);
+
+        const randCoef = 2 + Math.random() * 5;
+
+        if (
+          elTop >= topSide - elHeight * randCoef &&
+          elBottom <= bottomSide + elHeight * randCoef &&
+          elLeft >= leftSide - elWidth * randCoef &&
+          elRight <= rightSide + elWidth * randCoef
+        )
+          return true;
+
+        //hmm what about add random neigbours logic
+
+        return false;
+      })
+      .forEach((el, idx) => {
+        const elem = document.querySelector(`*[data-number="${el}"]`);
+        if (!elem) return;
+        // const fliptop = elem.querySelector(".flip-card-top");
+        // if (fliptop) {
+        //   (fliptop as HTMLElement).style.transitionDelay = `${idx * 10}ms`;
+        // }
+        setTimeout(() => {
+          (elem as HTMLElement).classList.add("flipped");
+          onOpenCard(el);
+        }, idx * 5);
+      });
+    console.log(arr);
+  });
+});
 </script>
 
 <template>
@@ -298,18 +355,25 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
     <div
       class="grid grid-cols-[6fr,4fr] items-center gap-10 max-w-[1440px] mx-auto"
     >
       <div class="flex flex-col">
-        <h1 class="text-[72px] font-bold text-own-light-green">Hi, I'm Egor</h1>
-        <p class="text-[18px] font-bold text-own-light-green fading-in">
+        <h1
+          class="text-[72px] font-bold text-own-light-green w-fit undersquared"
+        >
+          Hi, I'm Egor
+        </h1>
+        <p
+          class="text-[18px] font-bold text-own-light-green fading-in undersquared"
+        >
           I am a Frontend Developer. Working Vue 3 & Nuxt 3 creating Dapps for
           EVM like chains (ETH, BNB, Polygon). Currently i'm working at
           gotbit.io. Creating staking, vesting, NFT marketplaces, IDO launchpads
         </p>
 
-        <div class="flex items-center gap-2 mt-10">
+        <div class="flex items-center gap-2 mt-10 w-fit undersquared">
           <FloatingItem class="shuffling">
             <DocumentIcon class="fill-own-gold" />
           </FloatingItem>
@@ -322,7 +386,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="relative w-[50%] aspect-square">
+      <div class="relative w-[50%] aspect-square undersquared">
         <img
           class="w-full shrink-0 rounded-full border-[4px] border-white drop-shadow-2xl grayscale"
           src="/photo.jpg"
@@ -403,9 +467,11 @@ onMounted(() => {
 .flip-card-top {
   position: absolute;
   inset: 0;
-  background: red;
+  background: var(--flipcard-color, red);
   z-index: 1;
-  transition: opacity 0.2s ease-in-out;
+  /* transition: opacity 0.2s ease-in-out; */
+  transition: transform 0.4s ease-in-out;
+  transform: scale(1);
 }
 
 .flip-card-bottom {
@@ -414,7 +480,8 @@ onMounted(() => {
 }
 
 .flip-card.flipped .flip-card-top {
-  opacity: 0;
+  /* opacity: 0; */
+  transform: scale(0);
 }
 
 /* .flip-card-inner {
@@ -604,4 +671,8 @@ onMounted(() => {
   border-bottom: 2px solid red;
   transition: border 0.3s ease-in-out;
 } */
+
+.undersquared {
+  /* background-color: orange; */
+}
 </style>

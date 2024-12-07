@@ -6,19 +6,20 @@ import FloatingItem from "./base/FloatingItem.vue";
 
 const { y } = useWindowScroll();
 
-const handleScrollDown = () => {
+const handleScrollDown = (e: Event) => {
+  alert(e.target);
   console.log("scrolling");
   window.scrollBy({ top: window.innerHeight, left: 0, behavior: "smooth" });
 };
 </script>
 
 <template>
-  <div class="min-h-screen w-full flex flex-col">
+  <div class="min-h-screen w-full flex flex-col layout">
     <Transition name="fade-in">
       <Header v-if="y > 100" class="max-w-[1440px] mx-auto"></Header>
     </Transition>
 
-    <FloatingItem class="fixed bottom-[100px] left-[50%]">
+    <FloatingItem class="fixed bottom-[100px] left-[50%] undersquared">
       <button
         class="border-own-white border-[2px] w-10 h-10 rounded-full flex items-center justify-center"
         @click="handleScrollDown"
@@ -34,4 +35,8 @@ const handleScrollDown = () => {
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style scoped>
+.layout {
+  background-color: var(--background-color, green);
+}
+</style>
